@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>庞贝古城神秘别墅壁画</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .viewer-container {
+            position: relative;
+            width: 100%;
+            height: 70vh;
+            overflow: hidden;
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-viewer {
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+        }
+
+        .thumbnail-container {
+            width: 100%;
+            padding: 20px;
+            background-color: #eee;
+            box-sizing: border-box;
+        }
+
+        .thumbnail-wrapper {
+            position: relative;
+            width: 100%;
+            height: 120px;
+            overflow: hidden;
+            background-color: #ddd;
+            cursor: pointer;
+        }
+
+        .thumbnail-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .selection-box {
+            position: absolute;
+            border: 2px solid #ff6b35;
+            background-color: rgba(255, 107, 53, 0.3);
+            cursor: move;
+            top: 0;
+            left: 0;
+        }
+
+        .position-indicator {
+            text-align: center;
+            padding: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>庞贝古城神秘别墅壁画</h1>
+        </div>
+        
+        <div class="viewer-container">
+            <div id="mainViewer" style="width:100%; height:100%; overflow:hidden; position:relative;">
+                <img id="mainImage" style="height:100%; width:auto; display:block; position:absolute; top:0;" src="庞贝古城神秘别墅壁画.jpg" alt="庞贝古城神秘别墅壁画">
+            </div>
+        </div>
+        
+        <div class="position-indicator">
+            <span id="positionText">位置: 0%</span>
+        </div>
+        
+        <div class="thumbnail-container">
+            <div class="thumbnail-wrapper" id="thumbnailWrapper">
+                <img id="thumbnailImage" class="thumbnail-image" src="庞贝古城神秘别墅壁画.jpg" alt="缩略图">
+                <div id="selectionBox" class="selection-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const mainViewer = document.getElementById('mainViewer');
+            const mainImage = document.getElementById('mainImage');
+            const thumbnailWrapper = document.getElementById('thumbnailWrapper');
+            const thumbnailImage = document.getElementById('thumbnailImage');
+            const selectionBox = document.getElementById('selectionBox');
+            const positionText = document.getElementById('positionText');
+            
+            // 选择框尺寸（相对于缩略图）
+            const selectionBoxWidth = 150;
+            const selectionBoxHeight = 120; // 固定高度与缩略图容器高度一致
+            
+            // 固定的Y轴位置
+            const fixedY = 0;
+            
+            // 当前选择框位置
+            let selectionX = 0;
+            
+            // 初始化
+            function init() {
+                // 确保图像加载完成后再初始化
+                if (mainImage.complete) {
+                    initializeSelectionBox();
+                    updateMainViewer();
+                    addEventListeners();
+                } else {
+                    mainImage.onload = function() {
+                        initializeSelectionBox();
+                        updateMainViewer();
+                        addEventListeners();
+                    };
+                }
+            }
+            
+            // 初始化选择框
+            function initializeSelectionBox() {
+                selectionBox.style.width = selectionBoxWidth + 'px';
+                selectionBox.style.height = selectionBoxHeight + 'px';
+                selectionBox.style.left = '0px';
+                selectionBox.style.top = fixedY + 'px'; // 固定Y轴位置
+                
+                selectionX = 0;
+            }
+            
+            // 添加事件监听器
+            function addEventListeners() {
+                // 鼠标在缩略图上移动
+                thumbnailWrapper.addEventListener('mousemove', function(e) {
+                    updateSelectionBox(e);
+                    updateMainViewer();
+                });
+                
+                // 鼠标离开缩略图
+                thumbnailWrapper.addEventListener('mouseleave', function() {
+                    // 可以选择保持当前位置或重置到默认位置
+                });
+                
+                // 点击缩略图
+                thumbnailWrapper.addEventListener('click', function(e) {
+                    updateSelectionBox(e);
+                    updateMainViewer();
+                });
+            }
+            
+            // 更新选择框位置（只在X轴上移动）
+            function updateSelectionBox(e) {
+                const rect = thumbnailWrapper.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                
+                // 只更新X轴位置，Y轴位置固定
+                selectionX = Math.max(0, Math.min(x - selectionBoxWidth / 2, thumbnailWrapper.offsetWidth - selectionBoxWidth));
+                
+                // 更新选择框位置
+                selectionBox.style.left = selectionX + 'px';
+                // Y轴位置保持固定
+                selectionBox.style.top = fixedY + 'px';
+                
+                // 更新位置文本
+                const percentX = Math.round((selectionX / (thumbnailWrapper.offsetWidth - selectionBoxWidth)) * 100) || 0;
+                positionText.textContent = `位置: ${percentX}%`;
+            }
+            
+            // 更新主视图
+            function updateMainViewer() {
+                // 获取主视图容器尺寸
+                const viewerWidth = mainViewer.offsetWidth;
+                const viewerHeight = mainViewer.offsetHeight;
+                
+                // 获取图像实际尺寸
+                const imageWidth = mainImage.offsetWidth;
+                const imageHeight = mainImage.offsetHeight;
+                
+                // 如果图像宽度小于等于容器宽度，则居中显示
+                if (imageWidth <= viewerWidth) {
+                    mainImage.style.left = '50%';
+                    mainImage.style.transform = 'translateX(-50%)';
+                    return;
+                }
+                
+                // 计算选择框在缩略图中的相对位置 (0-1之间)
+                const selectionRatio = selectionX / (thumbnailWrapper.offsetWidth - selectionBoxWidth);
+                
+                // 计算图像可以移动的范围
+                const maxMove = imageWidth - viewerWidth;
+                
+                // 根据选择框位置计算图像应该移动的位置
+                const move = selectionRatio * maxMove;
+                
+                // 应用变换
+                mainImage.style.left = '0px';
+                mainImage.style.transform = `translateX(${-move}px)`;
+            }
+            
+            // 等待页面加载完成后初始化
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        });
+    </script>
+</body>
+</html>
